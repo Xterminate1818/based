@@ -39,20 +39,18 @@ impl GenericNumber {
   }
 
   fn truncate(&self, bytes: ReprSize, signed: bool) -> u64 {
-    let mask = bytes as u64;
-    let truncated = self.0 & mask;
-    let sign_mask = truncated
+    let sign_mask = self.0
       & match bytes {
         ReprSize::Byte => 0x80,
         ReprSize::Word => 0x8000,
         ReprSize::DWord => 0x800000,
         ReprSize::QWord => 0x80000000,
       };
-    if sign_mask != 0 && signed {
-      truncated.wrapping_neg()
-    } else {
-      truncated
-    }
+    let num = match sign_mask != 0 && signed {
+      true => self.0.wrapping_neg(),
+      false => self.0,
+    };
+    num & (bytes as u64)
   }
 
   pub fn to_str(
