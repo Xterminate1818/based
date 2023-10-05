@@ -38,28 +38,22 @@ impl GenericNumber {
     Self(input)
   }
 
-  fn truncate(&self, bytes: ReprSize, signed: bool) -> u64 {
-    let sign_mask = self.0
-      & match bytes {
-        ReprSize::Byte => 0x80,
-        ReprSize::Word => 0x8000,
-        ReprSize::DWord => 0x800000,
-        ReprSize::QWord => 0x80000000,
-      };
-    let num = match sign_mask != 0 && signed {
-      true => self.0.wrapping_neg(),
-      false => self.0,
-    };
-    num & (bytes as u64)
+  fn truncate(&self, bytes: ReprSize) -> u64 {
+    self.0 & (bytes as u64)
   }
 
-  pub fn to_str(
-    &self,
-    base: BaseRepr,
-    bytes: ReprSize,
-    signed: bool,
-  ) -> String {
-    let truncated = self.truncate(bytes, signed);
+  pub fn sign_bit(&self, bytes: ReprSize) -> bool {
+    let sign_bit = match bytes {
+      ReprSize::Byte => 0x80,
+      ReprSize::Word => 0x8000,
+      ReprSize::DWord => 0x80000000,
+      ReprSize::QWord => 0x8000000000000000,
+    };
+    (self.0 & sign_bit) > 0
+  }
+
+  pub fn to_str(&self, base: BaseRepr, bytes: ReprSize) -> String {
+    let truncated = self.truncate(bytes);
     match base {
       BaseRepr::Binary => format!("{:0b}", truncated),
       BaseRepr::Octal => format!("{:0o}", truncated),
