@@ -1,6 +1,6 @@
 #[derive(Clone, Copy, Debug)]
 #[repr(u32)]
-pub enum Base {
+pub enum BaseRepr {
   Binary = 2,
   Octal = 8,
   Decimal = 10,
@@ -16,38 +16,56 @@ pub enum ReprSize {
   QWord = u64::MAX as u64,
 }
 
-pub fn parse_num(input: &str, base: Base) -> Option<u128> {
-  let prefix = match base {
-    Base::Binary => "0b",
-    Base::Octal => "0o",
-    Base::Decimal => "0",
-    Base::Hex => "0x",
-  };
-  let input = input.trim().trim_start_matches(prefix);
-  match u128::from_str_radix(input, base as u32) {
-    Ok(n) => Some(n),
-    Err(_) => None,
+pub struct GenericNumber(u64);
+
+impl GenericNumber {
+  pub fn from_str(input: &str, base: BaseRepr) -> Option<Self> {
+    let prefix = match base {
+      BaseRepr::Binary => "0b",
+      BaseRepr::Octal => "0o",
+      BaseRepr::Decimal => "0",
+      BaseRepr::Hex => "0x",
+    };
+    let input = input.trim().trim_start_matches(prefix);
+    match u64::from_str_radix(input, base as u32) {
+      Ok(n) => Some(Self(n)),
+      Err(_) => None,
+    }
   }
-}
 
-fn truncate_num(input: u128, size: ReprSize) -> u128 {
-  let mask = size as u128;
-  input & mask
-}
-
-pub fn format_num(input: u128, size: ReprSize, base: Base) -> String {
-  let input = truncate_num(input, size);
-  match base {
-    Base::Binary => format!("{:0b}", input),
-    Base::Octal => format!("{:0o}", input),
-    Base::Decimal => format!("{}", input),
-    Base::Hex => format!("{:0x}", input),
+  pub fn from_decimal(input: u64) -> Self {
+    Self(input)
   }
-}
 
-fn main() {
-  let input = "0x12";
-  let n = parse_num(input, Base::Hex).unwrap();
-  let s = format_num(n, ReprSize::DWord, Base::Octal);
-  println!("{}", s);
+  fn truncate(&self, bytes: ReprSize, signed: bool) -> u64 {
+    let mask = bytes as u64;
+    let truncated = self.0 & mask;
+    let sign_mask = truncated
+      & match bytes {
+        ReprSize::Byte => 0x80,
+        ReprSize::Word => 0x8000,
+        ReprSize::DWord => 0x800000,
+        ReprSize::QWord => 0x80000000,
+      };
+    if sign_mask != 0 && signed {
+      truncated.wrapping_neg()
+    } else {
+      truncated
+    }
+  }
+
+  pub fn to_str(
+    &self,
+    base: BaseRepr,
+    bytes: ReprSize,
+    signed: bool,
+  ) -> String {
+    let truncated = self.truncate(bytes, signed);
+    match base {
+      BaseRepr::Binary => format!("{:0b}", truncated),
+      BaseRepr::Octal => format!("{:0o}", truncated),
+      BaseRepr::Decimal => format!("{}", truncated),
+      BaseRepr::Hex => format!("{:0x}", truncated),
+    }
+  }
 }
