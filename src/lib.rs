@@ -16,6 +16,7 @@ pub enum ReprSize {
   QWord = u64::MAX as u64,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct GenericNumber(u64);
 
 impl GenericNumber {
@@ -67,5 +68,11 @@ impl GenericNumber {
       BaseRepr::Decimal => format!("{}", truncated),
       BaseRepr::Hex => format!("{:0x}", truncated),
     }
+  }
+}
+
+impl Default for GenericNumber {
+  fn default() -> Self {
+    Self::from_decimal(0)
   }
 }
