@@ -1,5 +1,5 @@
-pub mod conv_trait;
-pub mod generic_num;
+mod conv_trait;
+mod generic_num;
 
 pub use conv_trait::*;
 pub use generic_num::*;
@@ -13,17 +13,6 @@ pub enum Base {
   Hex = 16,
 }
 
-impl Base {
-  pub fn digits_per_byte(&self) -> usize {
-    match self {
-      Base::Binary => 8,
-      Base::Octal => 3,
-      Base::Decimal => 0,
-      Base::Hex => 2,
-    }
-  }
-}
-
 #[repr(usize)]
 #[derive(Clone, Copy, Debug)]
 pub enum DataSize {
@@ -31,4 +20,9 @@ pub enum DataSize {
   Word = 2,
   DWord = 4,
   QWord = 8,
+}
+
+fn main() {
+  let i = GenericNum::DWord(13).to_binary();
+  println!("{}", i)
 }
