@@ -45,6 +45,8 @@ macro_rules! _impl_convert {
   ($type:ty) => {
     impl BinaryConvert for $type {
       fn from_binary(input: &str) -> Option<Self> {
+        let input = input.trim().to_lowercase();
+        let input = input.trim_start_matches("0b").trim_end_matches("b");
         match Self::from_str_radix(input, 2) {
           Ok(s) => Some(s),
           Err(_) => None,
@@ -52,7 +54,10 @@ macro_rules! _impl_convert {
       }
     }
     impl OctalConvert for $type {
+
       fn from_octal(input: &str) -> Option<Self> {
+        let input = input.trim().to_lowercase();
+        let input = input.trim_start_matches("0o").trim_end_matches("o");
         match Self::from_str_radix(input, 8) {
           Ok(s) => Some(s),
           Err(_) => None,
@@ -61,6 +66,7 @@ macro_rules! _impl_convert {
     }
     impl DecimalConvert for $type {
       fn from_decimal(input: &str) -> Option<Self> {
+        let input = &input.trim().to_lowercase();
         match Self::from_str_radix(input, 10) {
           Ok(s) => Some(s),
           Err(_) => None,
@@ -69,6 +75,8 @@ macro_rules! _impl_convert {
     }
     impl HexConvert for $type {
       fn from_hex(input: &str) -> Option<Self> {
+        let input = input.trim().to_lowercase();
+        let input = input.trim_start_matches("0x").trim_end_matches("h");
         match Self::from_str_radix(input, 16) {
           Ok(s) => Some(s),
           Err(_) => None,
